@@ -1,0 +1,12 @@
+mysql> CREATE USER 'test_user'@'localhost' IDENTIFIED BY 'password'
+    -> ;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> CREATE DATABASE test_database;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> GRANT ALL PRIVILEGES ON test_database.* TO 'test'@'localhost';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> FLUSH PRIVILEGES;
+Query OK, 0 rows affected (0.00 sec)
