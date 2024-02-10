@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type ConnectionPool struct {
+type StaticConnectionPool struct {
 	m                sync.Mutex
 	notFull          sync.Cond
 	notEmpty         sync.Cond
@@ -15,13 +15,17 @@ type ConnectionPool struct {
 	numOfConnections int
 }
 
-func NewConnectionPool(capacity int) *ConnectionPool {
+func NewStaticConnectionPool(capacity int) *StaticConnectionPool {
 	conns := make([]*sql.DB, 0, capacity)
+	// statically create all required connections at once
 	for i := 0; i < capacity; i++ {
 		conns = append(conns, NewDBConnection())
 	}
 	var mu sync.Mutex
-	return &ConnectionPool{
+	return &StaticConnectionPool{
+		// notFull and notEmpty are conditions with Shared Mutex
+		// In the shared mutex, locking one condition implicitly
+		// locks the other because they share the same mutex. -> Get and Release don't run in parallel
 		notFull:          *sync.NewCond(&mu),
 		notEmpty:         *sync.NewCond(&mu),
 		conns:            conns,
@@ -32,7 +36,7 @@ func NewConnectionPool(capacity int) *ConnectionPool {
 
 // TODO: We are defining the size of connection pool, but not the max number of connections
 // Returns a connection from pool
-func (cp *ConnectionPool) Get() *sql.DB {
+func (cp *StaticConnectionPool) Get() *sql.DB {
 	cp.notEmpty.L.Lock()
 	defer cp.notEmpty.L.Unlock()
 
@@ -55,7 +59,7 @@ func (cp *ConnectionPool) Get() *sql.DB {
 }
 
 // Adds connection back to pool
-func (cp *ConnectionPool) Release(conn *sql.DB) {
+func (cp *StaticConnectionPool) Release(conn *sql.DB) {
 	cp.notFull.L.Lock()
 	defer cp.notFull.L.Unlock()
 
@@ -69,7 +73,7 @@ func (cp *ConnectionPool) Release(conn *sql.DB) {
 	cp.notEmpty.Signal()
 }
 
-func (cp *ConnectionPool) CleanUp() {
+func (cp *StaticConnectionPool) CleanUp() {
 	connectionPool := cp.conns
 	cp.conns = nil
 	cp.numOfConnections = 0
@@ -81,10 +85,10 @@ func (cp *ConnectionPool) CleanUp() {
 	fmt.Println("All connections closed and connection pool set to nil!")
 }
 
-func (cp *ConnectionPool) isEmpty() bool {
+func (cp *StaticConnectionPool) isEmpty() bool {
 	return len(cp.conns) == 0
 }
 
-func (cp *ConnectionPool) isFull() bool {
+func (cp *StaticConnectionPool) isFull() bool {
 	return len(cp.conns) == cp.capacity
 }
