@@ -15,10 +15,11 @@ type MPMCBoundedQueue struct {
 }
 
 func NewMPMCBoundedQueue(capacity int) *MPMCBoundedQueue {
+	var mu sync.Mutex
 	return &MPMCBoundedQueue{
 		data:     make([]interface{}, 0, capacity),
-		notEmpty: *sync.NewCond(&sync.Mutex{}),
-		notFull:  *sync.NewCond(&sync.Mutex{}),
+		notEmpty: *sync.NewCond(&mu),
+		notFull:  *sync.NewCond(&mu),
 		capacity: capacity,
 	}
 }
