@@ -1,4 +1,4 @@
-module github.com/shafique-md-18/concurrency-applications
+module github.com/shafique-md-18/concurrency-examples
 
 go 1.21.5
 
