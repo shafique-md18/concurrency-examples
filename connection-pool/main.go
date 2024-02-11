@@ -91,7 +91,7 @@ func dynamicConnectionPoolExample() {
 }
 
 func main() {
-	// BenchmarkFunction(nonConnectionPoolExample)
-	// BenchmarkFunction(staticConnectionPoolExample)
+	BenchmarkFunction(nonConnectionPoolExample)
+	BenchmarkFunction(staticConnectionPoolExample)
 	BenchmarkFunction(dynamicConnectionPoolExample)
 }
